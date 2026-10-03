@@ -1,6 +1,7 @@
 // Exercise the language pack's browser artifact against stand-in services that
 // follow the shipped contracts: the locale lookup chain (language -> namespace ->
-// common -> key) and the package-text resolver used for plugin/bundle display text.
+// common -> key), the package-text resolver used for plugin and bundle display
+// text, and the account read that carries server-authored bonus copy.
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -9,6 +10,7 @@ const [, , packDir, localesFile] = process.argv
 const pkg = JSON.parse(fs.readFileSync(path.join(packDir, 'package.json'), 'utf8'))
 const shipped = JSON.parse(fs.readFileSync(localesFile, 'utf8')).namespaces
 const packageText = JSON.parse(fs.readFileSync(path.join(packDir, 'translations', 'package-text.ru.json'), 'utf8'))
+const serverText = JSON.parse(fs.readFileSync(path.join(packDir, 'translations', 'server-messages.ru.json'), 'utf8'))
 
 let captured
 const fakeWindow = {
@@ -47,11 +49,37 @@ const locale = {
   getLocale() {
     return { active: activeLocale }
   },
+  getSnapshot() {
+    return { active: activeLocale, locales: [], revision: 0 }
+  },
 }
+
+// Stand-in account remote: the Platform returns structured bonus records next to
+// a pre-formatted English sentence.
+const bonusRecord = {
+  orderId: 'order-1',
+  campaign: 'welcome',
+  amount: '6',
+  currency: 'CNY',
+  grantedAt: '2026-09-26T09:26:00Z',
+  expiresAt: '2026-10-10T09:26:00Z',
+  message: "You've received a CNY 6 bonus credit, valid until October 10, 2026, 5:26 PM Beijing Time.",
+}
+let currentBonus = { ...bonusRecord }
+const account = {
+  reads: 0,
+  async getUnnotifiedBonuses() {
+    this.reads++
+    return { ok: true, value: { accountId: 'account-1', bonuses: [{ ...currentBonus }] } }
+  },
+}
+const originalRead = account.getUnnotifiedBonuses
+const bonusMessageOf = (batch) => batch.value.bonuses[0].message
 
 const languages = []
 const dicts = new Map()
 const disposers = []
+const injectCalls = []
 let effects = 0
 const ctx = {
   effect(fn, label) {
@@ -61,22 +89,15 @@ const ctx = {
     disposers.push(disposer)
     return disposer
   },
-  locale: {
-    resolveText: locale.resolveText,
-    getLocale: locale.getLocale,
-    addLanguage(input) {
-      languages.push(input)
-      return () => {}
-    },
-    register(ns, localeId, entries) {
-      if (dicts.has(ns)) throw new Error(`duplicate registration for ${ns}`)
-      dicts.set(ns, { locale: localeId, entries })
-      return () => {}
-    },
+  inject(deps, callback) {
+    injectCalls.push(deps)
+    callback(ctx)
   },
+  get(name) {
+    return name === 'remote' ? { account, $host: { isLoopback: true } } : undefined
+  },
+  locale,
 }
-// The plugin patches the service instance it is handed.
-ctx.locale = locale
 locale.addLanguage = (input) => {
   languages.push(input)
   return () => {}
@@ -89,7 +110,8 @@ locale.register = (ns, localeId, entries) => {
 
 mod.apply(ctx)
 
-check(effects === dicts.size + 2, `one effect per resource (${effects} effects, ${dicts.size} dictionaries + language + package text)`)
+check(effects === dicts.size + 3, `one effect per resource (${effects} effects, ${dicts.size} dictionaries + language + package text + server text)`)
+check(injectCalls.some((deps) => Array.isArray(deps) && deps.includes('remote')), 'the pack waits for the remote service instead of requiring it')
 check(languages.length === 1, 'exactly one language definition is added')
 
 const language = languages[0] ?? {}
@@ -157,7 +179,31 @@ activeLocale = 'en'
 check(locale.resolveText(sampleSource) === sampleSource, 'with English active the override does not apply')
 activeLocale = 'ru'
 
+// Server-authored bonus copy: recomposed from the structured record.
+const template = serverText.bonusNotice
+check(typeof template === 'string', 'the pack ships a bonus notice template')
+check(account.getUnnotifiedBonuses !== originalRead, 'the pack wraps the account bonus read')
+
+const russianMessage = bonusMessageOf(await account.getUnnotifiedBonuses({ locale: 'ru' }))
+check(russianMessage !== bonusRecord.message, 'the English server sentence is replaced')
+check(/^Вам начислен бонус/.test(russianMessage), 'the Russian template is used')
+check(russianMessage.includes('6 CNY'), `the amount and currency survive ("${russianMessage}")`)
+check(!/You've received/.test(russianMessage), 'no English copy is left in the Russian notice')
+check(account.reads === 1, 'the original account read still runs exactly once')
+
+// Anything unexpected keeps the server sentence instead of inventing text.
+currentBonus = { ...bonusRecord, expiresAt: 'not-a-date' }
+check(bonusMessageOf(await account.getUnnotifiedBonuses()) === bonusRecord.message, 'an unusable expiry keeps the server sentence')
+currentBonus = { ...bonusRecord, amount: undefined }
+check(bonusMessageOf(await account.getUnnotifiedBonuses()) === bonusRecord.message, 'a missing amount keeps the server sentence')
+currentBonus = { ...bonusRecord }
+
+activeLocale = 'en'
+check(bonusMessageOf(await account.getUnnotifiedBonuses({ locale: 'en' })) === bonusRecord.message, 'with English active the server sentence is kept')
+activeLocale = 'ru'
+
 for (const dispose of disposers) dispose()
+check(account.getUnnotifiedBonuses === originalRead, 'disposal restores the original account read')
 check(locale.resolveText === originalResolveText, 'disposal restores the original package-text resolver')
 
 let translatedKeys = 0
@@ -170,11 +216,12 @@ console.log(`language:       ${language.id} (${language.label}), fallback ${lang
 console.log(`dictionaries:   ${dicts.size}`)
 console.log(`effects:        ${effects}`)
 console.log(`package text:   ${packageCards.length} strings`)
+console.log(`bonus notice:   ${russianMessage}`)
 console.log(`coverage:       ${translatedKeys}/${englishKeys} shipped dictionary keys (${((translatedKeys / englishKeys) * 100).toFixed(1)}%)`)
 
 if (failures.length) {
   console.error(`\nFAILED (${failures.length}):`)
-  for (const f of failures) console.error(`  - ${f}`)
+  for (const failure of failures) console.error(`  - ${failure}`)
   process.exit(1)
 }
 console.log('\nall artifact checks passed')
