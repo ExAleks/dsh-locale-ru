@@ -48,9 +48,39 @@ function flatten(node, prefixPath, out) {
 }
 const entries = flatten(header, '', new Map())
 
+const unpackedRoot = `${asarPath}.unpacked`
+const readPayload = (entryPath, entry) => {
+  if (entry.unpacked === true) return fs.readFileSync(path.join(unpackedRoot, entryPath.replace(/^\//, '')))
+  const payload = Buffer.alloc(entry.size)
+  fs.readSync(fd, payload, 0, entry.size, dataBase + Number(entry.offset))
+  return payload
+}
+
 if (flag('list')) {
   for (const entryPath of [...entries.keys()].sort()) console.log(entryPath)
   console.log(`# entries: ${entries.size}`)
+  process.exit(0)
+}
+
+// Search mode: find entries containing a regular expression and show a snippet.
+const grepSource = option('grep')
+if (grepSource !== undefined) {
+  const pattern = new RegExp(grepSource, 'g')
+  const maxBytes = Number(option('max-bytes', `${4 * 1024 * 1024}`))
+  let hits = 0
+  for (const [entryPath, entry] of [...entries].sort((a, b) => a[0].localeCompare(b[0]))) {
+    if (entry.size === 0 || entry.size > maxBytes) continue
+    const text = readPayload(entryPath, entry).toString('utf8')
+    pattern.lastIndex = 0
+    const match = pattern.exec(text)
+    if (match === null) continue
+    hits++
+    const from = Math.max(0, match.index - 140)
+    console.log(entryPath)
+    console.log(`    ${text.slice(from, match.index + 200).replace(/\s+/g, ' ')}`)
+  }
+  fs.closeSync(fd)
+  console.log(`# matches: ${hits}`)
   process.exit(0)
 }
 
@@ -62,7 +92,6 @@ if (outDir === undefined) {
 const filterSource = option('filter')
 const filter = filterSource === undefined ? undefined : new RegExp(filterSource)
 
-const unpackedRoot = `${asarPath}.unpacked`
 let written = 0
 let skipped = 0
 for (const [entryPath, entry] of [...entries].sort((a, b) => a[0].localeCompare(b[0]))) {
@@ -70,14 +99,7 @@ for (const [entryPath, entry] of [...entries].sort((a, b) => a[0].localeCompare(
   if (entry.size === 0) { skipped++; continue }
   const destination = path.join(outDir, entryPath.replace(/^\//, ''))
   fs.mkdirSync(path.dirname(destination), { recursive: true })
-  let payload
-  if (entry.unpacked === true) {
-    payload = fs.readFileSync(path.join(unpackedRoot, entryPath.replace(/^\//, '')))
-  } else {
-    payload = Buffer.alloc(entry.size)
-    fs.readSync(fd, payload, 0, entry.size, dataBase + Number(entry.offset))
-  }
-  fs.writeFileSync(destination, payload)
+  fs.writeFileSync(destination, readPayload(entryPath, entry))
   written++
   if (written % 250 === 0) console.log(`  ${written} files…`)
 }

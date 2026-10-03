@@ -21,10 +21,13 @@ jobs:
 
       - name: Translation tables parse
         run: |
-          node -e "const fs=require('fs'); for (const f of ['translations/ru.json','translations/package-text.ru.json','locale/en.json','locale/ru.json']) { JSON.parse(fs.readFileSync(f,'utf8')); console.log('ok', f); }"
+          node -e "const fs=require('fs'); for (const f of ['translations/ru.json','translations/package-text.ru.json','desktop-shell/ru.json','locale/en.json','locale/ru.json']) { JSON.parse(fs.readFileSync(f,'utf8')); console.log('ok', f); }"
 
       - name: client.js is valid JavaScript
         run: node --check client.js
+
+      - name: Tools parse
+        run: for f in tools/*.mjs; do node --check "$f"; done
 
       - name: client.js matches the translation sources
         run: node tools/verify-in-sync.mjs .
