@@ -1,0 +1,54 @@
+{
+  "name": "@local/dsh-locale-ru",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Russian language pack for the Harness web UI: adds the ru locale and Russian dictionaries.",
+  "license": "MIT",
+  "author": "ExAleks",
+  "homepage": "https://github.com/ExAleks/dsh-locale-ru#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ExAleks/dsh-locale-ru.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ExAleks/dsh-locale-ru/issues"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "localization",
+    "i18n",
+    "russian",
+    "language-pack",
+    "cordis-plugin"
+  ],
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "README.md",
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "locale/*.json",
+    "translations/*.json"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  }
+}

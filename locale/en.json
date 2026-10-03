@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Russian language pack",
+    "description": "Adds Русский (ru) to Settings → General → Language and ships Russian dictionaries for the Harness web interface, falling back to English for untranslated keys."
+  }
+}
