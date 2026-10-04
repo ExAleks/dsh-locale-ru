@@ -56,8 +56,8 @@ if errorlevel 1 (
   echo Replacing app.asar failed. The backup is kept at "%BACKUP%".
   exit /b 1
 )
-echo Done. Starting DeepSeek Harness.
-if exist "%EXE%" start "" "%EXE%"
+echo Done.
+call :relaunch
 exit /b 0
 
 :revert
@@ -77,6 +77,19 @@ if errorlevel 1 (
   echo Restore failed.
   exit /b 1
 )
-echo Done. Starting DeepSeek Harness.
-if exist "%EXE%" start "" "%EXE%"
+echo Done.
+call :relaunch
+exit /b 0
+
+:relaunch
+rem Deliberately no automatic start. Any process launched from this console is
+rem attached to it, and Windows terminates every attached process when the console
+rem window closes - that is exactly how the app was killed after the first run.
+rem A launch from Explorer or the Start menu belongs to the shell, so the app is
+rem never tied to this window.
+echo.
+echo The patch is applied. Start DeepSeek Harness yourself - its shortcut or the
+echo Start menu - so the app is not tied to this window:
+echo   "%EXE%"
+echo You can close this window at any time.
 exit /b 0

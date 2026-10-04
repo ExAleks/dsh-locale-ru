@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-locale-ru",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "description": "Russian language pack for DeepSeek Harness: ru locale, UI dictionaries, plugin and bundle text, Russian desktop-shell menu.",
