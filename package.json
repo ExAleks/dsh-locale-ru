@@ -1,9 +1,9 @@
 {
   "name": "@local/dsh-locale-ru",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Russian language pack for the Harness web UI: adds the ru locale and Russian dictionaries.",
+  "description": "Russian language pack for DeepSeek Harness: ru locale, UI dictionaries, plugin and bundle text, Russian desktop-shell menu.",
   "license": "MIT",
   "author": "ExAleks",
   "homepage": "https://github.com/ExAleks/dsh-locale-ru#readme",
