@@ -1,7 +1,112 @@
 # DSH Locale RU
 
+**Unofficial Russian localization for DeepSeek Harness (DSH).** Adds a `Русский` language to the desktop app: 2425 of 2428 UI strings across all 57 namespaces, plugin and bundle text, the native `Application` / `Edit` menu, and a Russian bonus notice.
+**Неофициальная русская локализация DeepSeek Harness.**
+
+**English** · [Русский](#русский)
+
+---
+
+## English
+
+Russian language pack for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), shipped as an ordinary DSH client plugin bundle. This is an independent community project and is **not affiliated with or endorsed by DeepSeek**.
+
+### What you get
+
+| | |
+|---|---|
+| UI strings | **2425 of 2428** dictionary strings across **57 of 57** namespaces (99.9 %) |
+| Plugin and bundle cards | **297** titles and descriptions resolved from package manifests |
+| Language switch | a `Русский` (`ru`, English fallback) entry in **Settings → General → Language**, applied live without a restart |
+| Native menu | `Application` / `Edit` with all submenus, the quit dialog, the welcome window and update screens — through an optional shell patch |
+| Bonus notice | recomposed in Russian from the platform's structured `amount` / `currency` / `expires_at` fields instead of the English sentence the API returns |
+
+Untranslated keys fall back to English, so a partial dictionary is always safe.
+
+### Requirements
+
+- **DeepSeek Harness Desktop** `0.2.0-rc.2` — the pack is built and verified against it;
+- Node.js only for rebuilding from source (the Node shipped with DSH works: `resources\runtime\primary-runtime\dependencies\node\bin\node.exe`).
+
+### Install
+
+```bash
+git clone https://github.com/ExAleks/dsh-locale-ru.git
+dsh plugin --profile <profile> add "<path to the clone>"
+```
+
+`dsh plugin add` records the dependency in the profile's `package.json` and appends the bundle to `dsh.profile.bundles`. The GUI route is the same: **Plugins → Add plugin**, then point it at the absolute path.
+
+Then pick **Settings → General → Language → Русский**. If the page was already open, reload it (Ctrl+R). The choice is stored in the Host settings, not in the browser.
+
+Remove it the same way (**Plugins** page, or `dsh plugin --profile <profile> remove @local/dsh-locale-ru`); the language disappears from the list and the interface returns to English.
+
+### Native menu (Electron shell)
+
+The `Application` / `Edit` menu, the quit dialog, the welcome window and the update screens are drawn by the Electron shell, not by the web UI: its message dictionaries live inside `app.asar`, ship only `en` and `zh`, and the choice is hard-coded in `resolveDesktopLocale()`. No plugin can reach that code — plugins run in another process — so this part is an optional installer patch that adds a Russian table (164 messages) to the shell.
+
+```bash
+# 1. build a patched archive next to the original (the installation is untouched)
+node tools/patch-desktop-locale.mjs --asar "<DSH>/resources/app.asar"
+
+# 2. apply it while the app is closed — the script waits, keeps a backup, and leaves the start to you
+tools\apply-desktop-menu.cmd apply
+
+# revert
+tools\apply-desktop-menu.cmd revert
+```
+
+On Windows `<DSH>` is `%LOCALAPPDATA%\Programs\DeepSeek Harness`, and step 2 is a double-click on `apply-desktop-menu.cmd`. On macOS and Linux there is no step 2: close the app and copy the built archive over `resources/app.asar` yourself, keeping the original for a revert.
+
+Worth knowing:
+
+- **It touches the installation**: `resources/app.asar` is replaced, the original stays next to it as `app.asar.backup`, and a revert is one command. Every DSH update overwrites the patch, so it has to be applied again.
+- **The tool checks safety itself**: it reads Electron's fuse bits and refuses to patch when `app.asar` integrity validation is enabled (it is off in current builds); it verifies the message keys against the installed version and refuses to run if the product renamed them; it syntax-checks every file before writing and rebuilds the archive with a byte-for-byte check of all 12 967 entries.
+- **The translation is additive**: Russian messages are layered over English, so anything untranslated stays English instead of going blank.
+- **The language is chosen normally**: Russian when Settings says so or when the system language is Russian; `en` and `zh` behave exactly as before.
+- **The script does not start the app**: a process launched from a console window is tied to it, and Windows terminates attached processes when that window closes. Start DSH from its shortcut or the Start menu instead, and close the script's window whenever you like.
+- Verify the result without launching the app: `node tools/verify-desktop-patch.mjs --asar "<DSH>/resources/app.asar"`.
+
+### What stays English
+
+- **Module short names** (`persona`, `tool-bash`, `tool-fs-search`) — identifiers the product shows on purpose;
+- **the account window** — a platform page with its own locale (`en_US` / `zh_CN`);
+- **other server text** — the bonus notice is handled (see above), but arbitrary platform copy such as account error messages arrives ready-made;
+- **agent content** — session titles, messages, code, command output;
+- **the native menu** without the shell patch — it is unreachable from a plugin.
+
+### Rebuilding and checks
+
+```bash
+# 1. pull the shipped dictionaries and manifests out of the installed DSH
+node tools/asar-extract.mjs --asar "<DSH>/resources/app.asar" --out ref \
+  --filter "node_modules/@deepseek-ai/[^/]+/(lib/client\.js|package\.json|locale/[a-z-]+\.json)$"
+node tools/extract-locales.mjs ref/dsh/node_modules/@deepseek-ai ref/locales.json
+node tools/collect-manifest-text.mjs ref/dsh/node_modules/@deepseek-ai ref/manifest-texts.json
+
+# 2. build and test the artifact
+node tools/build-locale-ru.mjs ref/locales.json translations/ru.json \
+  translations/package-text.ru.json translations/server-messages.ru.json \
+  ref/manifest-texts.json client.js @local/dsh-locale-ru
+node tools/test-locale-pack.mjs . ref/locales.json
+
+# 3. prove that client.js matches its sources (no DSH needed)
+node tools/verify-in-sync.mjs .
+```
+
+The build fails when a key is missing from the shipped English dictionary or when a `{placeholder}` set differs, so typos cannot reach the interface. CI runs the manifest, JSON, syntax and artifact-drift checks on every push.
+
+### License
+
+MIT — see [LICENSE](LICENSE). Rights to DeepSeek Harness and its interface strings belong to their owners; only translations and plugin code live here. Files extracted from an installation (`ref/`) are never committed.
+
+---
+
+<a id="русский"></a>
+
+## Русский
+
 **Неофициальный русский языковой пакет для DeepSeek Harness (DSH).**
-Unofficial Russian language pack for the DeepSeek Harness (DSH) desktop app.
 
 - **2425 из 2428** строк словарей интерфейса — **57 namespace** (вся обвязка продукта)
 - **297** строк манифестов: названия и описания плагинов и бандлов
@@ -11,12 +116,12 @@ Unofficial Russian language pack for the DeepSeek Harness (DSH) desktop app.
 - **нативное меню** приложения (`Application`, `Edit` и всё внутри), диалог выхода, окно приветствия и экраны обновления — отдельным опциональным патчем шелла, см. [Нативное меню](#нативное-меню-electron-шелл)
 - основная часть — обычный клиентский плагин-бандл DSH: включается, выключается и удаляется как любой другой
 
-## Требования
+### Требования
 
 - установленный **DeepSeek Harness Desktop** `0.2.0-rc.2` (пакет собран и проверен на нём);
-- для сборки из исходников — Node.js (подойдёт Node из поставки DSH: `resources\runtime\primary-runtime\dependencies\node\bin\node.exe`).
+- для сборки из исходников — Node.js (подойдёт Node из поставки DSH).
 
-## Установка
+### Установка
 
 ```bash
 git clone https://github.com/ExAleks/dsh-locale-ru.git
@@ -31,7 +136,7 @@ dsh plugin --profile <профиль> add "<путь к клонированно
 
 Удалить пакет: на странице **Плагины** или командой `dsh plugin --profile <профиль> remove @local/dsh-locale-ru`. Язык при этом исчезает из списка, а интерфейс возвращается к английскому.
 
-## Нативное меню (Electron-шелл)
+### Нативное меню (Electron-шелл)
 
 Меню `Application` / `Edit`, диалог выхода, окно приветствия и экраны обновления рисует не веб-интерфейс, а сам Electron-шелл: его словари сообщений лежат внутри `app.asar`, поддерживают только `en` и `zh`, а выбор языка зашит в `resolveDesktopLocale()`. Ни клиентский, ни host-плагин до этого кода не достаёт — плагины работают в другом процессе, а `app.asar` занят запущенным приложением.
 
@@ -60,7 +165,7 @@ tools\apply-desktop-menu.cmd revert
 - **Язык выбирается штатно**: русский — если в настройках выбран «Русский» или системный язык русский; для `en` и `zh` поведение не меняется.
 - Проверить результат, не запуская приложение: `node tools/verify-desktop-patch.mjs --asar "<DSH>/resources/app.asar"`.
 
-## Сборка из исходников
+### Сборка из исходников
 
 Весь инструментарий — на Node.js, без зависимостей. `ref/` в репозитории нет: он генерируется из вашей установки.
 
@@ -81,7 +186,7 @@ node tools/test-locale-pack.mjs . ref/locales.json
 node tools/verify-in-sync.mjs .
 ```
 
-## Как переводить
+### Как переводить
 
 | Файл | Что внутри |
 |---|---|
@@ -93,7 +198,7 @@ node tools/verify-in-sync.mjs .
 
 Сборка падает, если ключа нет во встроенном английском словаре или разошёлся набор `{плейсхолдеров}` — опечатка не уедет в интерфейс. После правки: пересборка + `verify-in-sync.mjs` (и `test-locale-pack.mjs`, если DSH установлен). Затем Ctrl+R: URL модуля содержит rev-хеш содержимого, поэтому страница забирает свежую версию.
 
-## Как устроено
+### Как устроено
 
 - **Плагин.** `package.json` объявляет `dsh.bundle.patch` (патч-строка в композиции профиля) и `dsh.client` (браузерная половина), `cordis.patch.yml` вставляет строку `locale-ru`, `client.js` регистрируется через `window.__ModuleLoader__.load`.
 - **Язык и словари.** `ctx.locale.addLanguage({ id: 'ru', label: 'Русский', fallback: 'en' })` добавляет язык в каталог, `ctx.locale.register(namespace, 'ru', {...})` — словари. Поиск идёт по цепочке `ru → en → common → сам ключ`.
@@ -101,7 +206,7 @@ node tools/verify-in-sync.mjs .
 - **Тексты с сервера.** Уведомление о начисленном бонусе приходит с платформы готовой английской фразой (`msg`), хотя рядом лежат структурированные `amount`, `currency` и `expires_at`, а язык запроса клиент уже передаёт. Пока активен русский, пакет перехватывает чтение этого списка и собирает фразу сам: сумма, валюта и дата в русском формате с часовым поясом. Если полей нет или дата нечитаемая, остаётся текст сервера — ничего не додумывается.
 - **Шелл.** Патч вставляет `const ru = {...}` перед резолвером в `lib/main.js`, `lib/preload-app.cjs` и `lib/preload-welcome.cjs`, а `resolveDesktopLocale()` начинает возвращать русские сообщения поверх английских для языка `ru`.
 
-## Инструменты
+### Инструменты
 
 | Скрипт | Назначение |
 |---|---|
@@ -114,13 +219,13 @@ node tools/verify-in-sync.mjs .
 | `extract-desktop-messages.mjs` | вытаскивает словари сообщений шелла из его `lib/main.js` |
 | `patch-desktop-locale.mjs` | вставляет русскую таблицу в шелл и пересобирает `app.asar` (`--dry-run`, `--revert`, `--force`) |
 | `verify-desktop-patch.mjs` | проверяет резолвер локали в собранном архиве без запуска Electron |
-| `apply-desktop-menu.cmd` | применяет и откатывает патч шелла: ждёт закрытия приложения, делает бэкап, перезапускает |
+| `apply-desktop-menu.cmd` | применяет и откатывает патч шелла: ждёт закрытия приложения, делает бэкап |
 | `show-locales.mjs` | печатает английские строки выбранных namespace |
 | `audit-client-entries.mjs` | сверяет клиентские точки входа из манифестов с просканированными |
 | `make-ru-work.mjs`, `merge-ru.mjs` | нарезка заданий на перевод и слияние с проверками |
 | `make-pkgtext-work.mjs`, `merge-pkgtext.mjs` | то же для текстов манифестов |
 
-## Структура репозитория
+### Структура репозитория
 
 ```
 client.js                        собранный браузерный артефакт плагина
@@ -132,7 +237,7 @@ tools/                           извлечение, сборка, тесты,
 .github/workflows/check.yml      CI: манифест, JSON, синтаксис, соответствие артефакта исходникам
 ```
 
-## Что не локализуется
+### Что не локализуется
 
 - **короткие имена модулей** (`persona`, `tool-bash`, `tool-fs-search`) — это идентификаторы, продукт показывает их намеренно;
 - **окно аккаунта** — встроенная страница платформы, её язык задаётся отдельно (`en_US`/`zh_CN`);
@@ -140,11 +245,11 @@ tools/                           извлечение, сборка, тесты,
 - **контент агента** — заголовки сессий, сообщения, код, вывод команд;
 - **нативное меню** без [патча шелла](#нативное-меню-electron-шелл) остаётся английским: до кода шелла плагин не достаёт.
 
-## Совместимость и обновления
+### Совместимость и обновления
 
 Пакет собран под DSH `0.2.0-rc.2` (Desktop). Словари сверяются с установленной сборкой: после обновления DSH пересоберите `ref/locales.json` и запустите сборку — она сообщит о расхождениях, а непереведённое просто останется английским. Патч шелла устроен так же (`patch-desktop-locale.mjs` сверяет ключи и откажется работать при переименовании сообщений) и требует повторного применения после каждого обновления.
 
-## Что нового
+### Что нового
 
 **0.2.1**
 
@@ -161,18 +266,7 @@ tools/                           извлечение, сборка, тесты,
 - первый выпуск: язык «Русский», 2425 строк словарей в 57 namespace, 297 строк манифестов, покрытие 99,9 %;
 - сборка со сверкой ключей и плейсхолдеров, тест артефакта и офлайн-проверка синхронности в CI.
 
-## English
-
-Unofficial Russian language pack for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) desktop app. It ships as an ordinary DSH client plugin bundle and adds a `Русский` (`ru`, English fallback) language with Russian dictionaries for 57 namespaces (2425 of 2428 UI strings), Russian titles and descriptions for plugin and bundle cards, and a Russian bonus notification recomposed from the platform's structured fields.
-
-```bash
-git clone https://github.com/ExAleks/dsh-locale-ru.git
-dsh plugin --profile <profile> add "<path to the clone>"
-```
-
-Then pick **Settings → General → Language → Русский**. The native `Application` / `Edit` menu and the shell dialogs live inside `app.asar` and cannot be reached from a plugin, so an optional installer patch under `tools/` adds a Russian message table to the Electron shell (with a backup, verification and one-command revert); see the sections above for the exact commands. The committed artifact is CI-checked against its translation sources with `tools/verify-in-sync.mjs`.
-
-## Лицензия и правовая оговорка
+### Лицензия и правовая оговорка
 
 MIT — см. [LICENSE](LICENSE).
 
