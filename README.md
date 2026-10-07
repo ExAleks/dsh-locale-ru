@@ -96,6 +96,10 @@ node tools/verify-in-sync.mjs .
 
 The build fails when a key is missing from the shipped English dictionary or when a `{placeholder}` set differs, so typos cannot reach the interface. CI runs the manifest, JSON, syntax and artifact-drift checks on every push.
 
+### Feedback
+
+Questions, ideas and translation fixes are welcome: open a [Discussion](https://github.com/ExAleks/dsh-locale-ru/discussions) or an [Issue](https://github.com/ExAleks/dsh-locale-ru/issues).
+
 ### License
 
 MIT — see [LICENSE](LICENSE). Rights to DeepSeek Harness and its interface strings belong to their owners; only translations and plugin code live here. Files extracted from an installation (`ref/`) are never committed.
@@ -265,6 +269,10 @@ tools/                           извлечение, сборка, тесты,
 
 - первый выпуск: язык «Русский», 2425 строк словарей в 57 namespace, 297 строк манифестов, покрытие 99,9 %;
 - сборка со сверкой ключей и плейсхолдеров, тест артефакта и офлайн-проверка синхронности в CI.
+
+### Обратная связь
+
+Вопросы, идеи и правки перевода — в [обсуждениях](https://github.com/ExAleks/dsh-locale-ru/discussions) или [issue](https://github.com/ExAleks/dsh-locale-ru/issues).
 
 ### Лицензия и правовая оговорка
 
