@@ -23,6 +23,20 @@ Russian language pack for [DeepSeek Harness](https://github.com/deepseek-ai/deep
 
 Untranslated keys fall back to English, so a partial dictionary is always safe.
 
+### Screenshots
+
+<img src="docs/screenshots/03-settings-language-ru.png" width="820" alt="Settings → General with the Russian language selected">
+
+Settings → General: the language row that turns the interface Russian.
+
+<img src="docs/screenshots/02-plugins-ru.png" width="820" alt="Plugins page with Russian cards">
+
+The Plugins page: official bundles and this pack, all card text in Russian.
+
+<img src="docs/screenshots/01-app-ru.png" width="820" alt="The app shell in Russian">
+
+The app shell in Russian.
+
 ### Requirements
 
 - **DeepSeek Harness Desktop** `0.2.0-rc.2` — the pack is built and verified against it;
@@ -119,6 +133,20 @@ MIT — see [LICENSE](LICENSE). Rights to DeepSeek Harness and its interface str
 - уведомление о начисленном бонусе собирается по-русски из структурированных полей платформы
 - **нативное меню** приложения (`Application`, `Edit` и всё внутри), диалог выхода, окно приветствия и экраны обновления — отдельным опциональным патчем шелла, см. [Нативное меню](#нативное-меню-electron-шелл)
 - основная часть — обычный клиентский плагин-бандл DSH: включается, выключается и удаляется как любой другой
+
+### Как это выглядит
+
+<img src="docs/screenshots/03-settings-language-ru.png" width="820" alt="Настройки → Общие, выбран русский язык">
+
+Настройки → Общие: та самая строка «Язык», которая включает русский интерфейс.
+
+<img src="docs/screenshots/02-plugins-ru.png" width="820" alt="Страница плагинов с русскими карточками">
+
+Страница «Плагины»: официальные бандлы и этот пакет — весь текст карточек по-русски.
+
+<img src="docs/screenshots/01-app-ru.png" width="820" alt="Оболочка приложения по-русски">
+
+Оболочка приложения по-русски.
 
 ### Требования
 
@@ -237,6 +265,7 @@ index.js, cordis.patch.yml       host-половина и патч-строка 
 locale/ru.json, locale/en.json   название и описание пакета для карточки плагина
 translations/                    словари интерфейса, тексты манифестов, серверные шаблоны
 desktop-shell/ru.json            сообщения Electron-шелла для патча меню
+docs/screenshots/                скриншоты интерфейса для README
 tools/                           извлечение, сборка, тесты, патч шелла
 .github/workflows/check.yml      CI: манифест, JSON, синтаксис, соответствие артефакта исходникам
 ```
