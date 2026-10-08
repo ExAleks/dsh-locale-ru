@@ -252,6 +252,7 @@ node tools/verify-in-sync.mjs .
 | `patch-desktop-locale.mjs` | вставляет русскую таблицу в шелл и пересобирает `app.asar` (`--dry-run`, `--revert`, `--force`) |
 | `verify-desktop-patch.mjs` | проверяет резолвер локали в собранном архиве без запуска Electron |
 | `apply-desktop-menu.cmd` | применяет и откатывает патч шелла: ждёт закрытия приложения, делает бэкап |
+| `capture-screenshots.mjs` | снимает скриншоты интерфейса в headless Chrome с чистого экземпляра DSH (без сеансов и аккаунта) |
 | `show-locales.mjs` | печатает английские строки выбранных namespace |
 | `audit-client-entries.mjs` | сверяет клиентские точки входа из манифестов с просканированными |
 | `make-ru-work.mjs`, `merge-ru.mjs` | нарезка заданий на перевод и слияние с проверками |
